@@ -5,13 +5,13 @@ import (
 )
 
 func Calc(reader interpreteter.TokenReader) (int, error) {
-	expectedSequenceTypes := []string{
+	expectedSequenceTokens := []string{
 		interpreteter.INTEGER,
 		interpreteter.PLUS,
 		interpreteter.INTEGER,
 		interpreteter.NEWLINE,
 	}
-	tokens, err := _CollectTokens(reader, expectedSequenceTypes)
+	tokens, err := _CollectTokens(reader, expectedSequenceTokens)
 	if err != nil {
 		return 0, err
 	}
