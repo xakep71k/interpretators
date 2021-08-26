@@ -1,9 +1,9 @@
 package interpreteter
 
 const (
-	INTEGER = "INTEGER"
-	PLUS    = "PLUS"
-	NEWLINE = "NEWLINE"
+	INTEGER = "0-9"
+	PLUS    = "+"
+	NEWLINE = "\\n"
 )
 
 type Token interface {
