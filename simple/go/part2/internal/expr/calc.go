@@ -1,23 +1,15 @@
 package expr
 
 import (
-	"interpreteter/internal/interpreteter"
+	"bytes"
+	"interpreteter/internal/token"
 )
 
-func Calc(reader interpreteter.TokenReader) (int, error) {
-	expectedSequenceTokens := []string{
-		interpreteter.INTEGER,
-		interpreteter.PLUS,
-		interpreteter.INTEGER,
-		interpreteter.NEWLINE,
-	}
-	tokens, err := _CollectTokens(reader, expectedSequenceTokens)
+func Calc(buffer *bytes.Buffer) (int, error) {
+	reader, err := token.NewReader(buffer)
 	if err != nil {
 		return 0, err
 	}
-
-	left := tokens[0]
-	right := tokens[2]
-
-	return left.Value() + right.Value(), nil
+	eater := token.NewEater(reader)
+	return expr(eater)
 }

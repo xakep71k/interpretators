@@ -2,19 +2,19 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"interpreteter/internal/expr"
-	"interpreteter/internal/token"
 	"io"
 	"os"
 )
 
 func main() {
-	tokenStream := token.NewReader(bufio.NewReader(os.Stdin))
+	reader := bufio.NewReader(os.Stdin)
 
 	for {
 		fmt.Print("calc> ")
-		result, err := expr.Calc(tokenStream)
+		line, err := reader.ReadSlice('\n')
 		if err != nil {
 			if err == io.EOF {
 				fmt.Println("bye")
@@ -24,6 +24,13 @@ func main() {
 			return
 		}
 
+		input := bytes.NewBuffer(line)
+		result, err := expr.Calc(input)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			fmt.Println()
+			continue
+		}
 		fmt.Println(result)
 	}
 }

@@ -1,40 +1,33 @@
 package token
 
 import (
-	"fmt"
+	"bytes"
 	"interpreteter/internal/interpreteter"
-	"io"
 	"unicode"
 )
 
-func _MakeFromIO(reader io.RuneReader) (interpreteter.Token, error) {
-	char, _, err := reader.ReadRune()
-	if err != nil {
-		return _Impl{}, err
+func _New(value int, kind string) interpreteter.Token {
+	return &_Impl{
+		_Type:  kind,
+		_Value: value,
 	}
-
-	return _MakeFromRune(char)
 }
 
-func _MakeFromRune(char rune) (interpreteter.Token, error) {
-	token := _Impl{}
-	if unicode.IsDigit(char) {
-		token._Type = interpreteter.INTEGER
-		token._Value = int(char) - int('0')
-		return token, nil
+func _MakeFromBuffer(input *bytes.Buffer) (interpreteter.Token, error) {
+	ch, _, err := input.ReadRune()
+	if err != nil {
+		return nil, err
+	}
+	if unicode.IsDigit(ch) {
+		return _New(int(ch)-int('0'), interpreteter.INTEGER), nil
 	}
 
-	if char == '+' {
-		token._Type = interpreteter.PLUS
-		token._Value = int(char)
-		return token, nil
+	switch ch {
+	case '+':
+		return _New(int(ch), interpreteter.PLUS), nil
+	case '\n':
+		return _New(int(ch), interpreteter.NEWLINE), nil
 	}
 
-	if char == '\n' {
-		token._Type = interpreteter.NEWLINE
-		token._Value = int(char)
-		return token, nil
-	}
-
-	return token, fmt.Errorf("unknown character '%s'", string(char))
+	return nil, interpreteter.ErrInvalidSyntax
 }
