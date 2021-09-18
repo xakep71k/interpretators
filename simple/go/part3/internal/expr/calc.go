@@ -2,6 +2,7 @@ package expr
 
 import (
 	"bytes"
+	"interpreteter/internal/interpreteter"
 	"interpreteter/internal/token"
 )
 
@@ -10,6 +11,6 @@ func Calc(buffer *bytes.Buffer) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	eater := token.NewEater(reader)
+	eater := interpreteter.NewEater(reader)
 	return expr(eater)
 }

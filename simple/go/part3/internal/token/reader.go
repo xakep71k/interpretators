@@ -5,12 +5,7 @@ import (
 	"interpreteter/internal/interpreteter"
 )
 
-type Reader interface {
-	Current() interpreteter.Token
-	Next() error
-}
-
-func NewReader(buffer *bytes.Buffer) (Reader, error) {
+func NewReader(buffer *bytes.Buffer) (interpreteter.Reader, error) {
 	reader := &_Reader{
 		buffer: buffer,
 	}

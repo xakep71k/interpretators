@@ -1,8 +1,4 @@
-package token
-
-import (
-	"interpreteter/internal/interpreteter"
-)
+package interpreteter
 
 type Eater interface {
 	Reader
@@ -21,12 +17,12 @@ type _Eater struct {
 
 func (e *_Eater) Eat(kind string) error {
 	if e.reader.Current().Type() != kind {
-		return interpreteter.ErrInvalidSyntax
+		return ErrInvalidSyntax
 	}
 	return e.Next()
 }
 
-func (e *_Eater) Current() interpreteter.Token {
+func (e *_Eater) Current() Token {
 	return e.reader.Current()
 }
 

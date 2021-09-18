@@ -2,11 +2,10 @@ package expr
 
 import (
 	"interpreteter/internal/interpreteter"
-	"interpreteter/internal/token"
 	"io"
 )
 
-func expr(eater token.Eater) (int, error) {
+func expr(eater interpreteter.Eater) (int, error) {
 	left := eater.Current()
 	if err := eater.Eat(interpreteter.INTEGER); err != nil {
 		return 0, err

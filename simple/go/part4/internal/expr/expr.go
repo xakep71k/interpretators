@@ -5,34 +5,34 @@ import (
 )
 
 func expr(eater interpreteter.Eater) (int, error) {
-	result, err := term(eater)
+	result, err := factor(eater)
 	if err != nil {
 		return 0, err
 	}
 
-	const PLUS = interpreteter.PLUS
-	const MINUS = interpreteter.MINUS
-	for tkn := eater.Current(); tkn.Type() == PLUS || tkn.Type() == MINUS; tkn = eater.Current() {
-		if tkn.Type() == PLUS {
-			if err := eater.Eat(PLUS); err != nil {
+	const MUL = interpreteter.MUL
+	const MINUS = interpreteter.DIV
+	for tkn := eater.Current(); tkn.Type() == MUL || tkn.Type() == MINUS; tkn = eater.Current() {
+		if tkn.Type() == MUL {
+			if err := eater.Eat(MUL); err != nil {
 				return 0, err
 			}
 
-			nextResult, err := term(eater)
+			nextResult, err := factor(eater)
 			if err != nil {
 				return 0, err
 			}
-			result = result + nextResult
+			result = result * nextResult
 		} else if tkn.Type() == MINUS {
 			if err := eater.Eat(MINUS); err != nil {
 				return 0, err
 			}
 
-			nextResult, err := term(eater)
+			nextResult, err := factor(eater)
 			if err != nil {
 				return 0, err
 			}
-			result = result - nextResult
+			result = result / nextResult
 		}
 	}
 
