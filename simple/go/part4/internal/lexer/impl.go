@@ -5,11 +5,6 @@ import (
 	"interpreteter/internal/interpreteter"
 )
 
-type Reader interface {
-	Current() interpreteter.Token
-	Next() error
-}
-
 func New(tokenFactory interpreteter.TokenFactory, buffer *bytes.Buffer) (interpreteter.Lexer, error) {
 	impl := &_Impl{
 		buffer:       buffer,
