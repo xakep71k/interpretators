@@ -26,7 +26,9 @@ func _MakeFromBuffer(input *bytes.Buffer) (interpreteter.Token, error) {
 		}
 
 		if unicode.IsDigit(ch) {
-			input.UnreadRune()
+			if err := input.UnreadRune(); err != nil {
+				return nil, err
+			}
 			return _MakeIntegerFromBuffer(input)
 		}
 

@@ -11,7 +11,7 @@ func NewFactory() *Factory {
 	return &Factory{}
 }
 
-func (f *Factory) Create(value int, kind string) interpreteter.Token {
+func (f *Factory) NewToken(value int, kind string) interpreteter.Token {
 	return &_Impl{
 		_Type:  kind,
 		_Value: value,

@@ -13,5 +13,5 @@ type Token interface {
 }
 
 type TokenFactory interface {
-	Create(value int, kind string) Token
+	NewToken(value int, kind string) Token
 }

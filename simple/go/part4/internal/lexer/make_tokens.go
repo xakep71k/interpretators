@@ -19,17 +19,19 @@ func (impl *_Impl) _MakeFromBuffer(input *bytes.Buffer) (interpreteter.Token, er
 		}
 
 		if unicode.IsDigit(ch) {
-			input.UnreadRune()
+			if err := input.UnreadRune(); err != nil {
+				return nil, err
+			}
 			return impl._MakeIntegerFromBuffer(input)
 		}
 
 		switch ch {
 		case '*':
-			return impl.tokenFactory.Create(int(ch), interpreteter.MUL), nil
+			return impl.tokenFactory.NewToken(int(ch), interpreteter.MUL), nil
 		case '/':
-			return impl.tokenFactory.Create(int(ch), interpreteter.DIV), nil
+			return impl.tokenFactory.NewToken(int(ch), interpreteter.DIV), nil
 		case '\n':
-			return impl.tokenFactory.Create(int(ch), interpreteter.NEWLINE), nil
+			return impl.tokenFactory.NewToken(int(ch), interpreteter.NEWLINE), nil
 		}
 		return nil, interpreteter.ErrInvalidSyntax
 	}
@@ -56,5 +58,5 @@ func (impl *_Impl) _MakeIntegerFromBuffer(input *bytes.Buffer) (interpreteter.To
 		return nil, err
 	}
 
-	return impl.tokenFactory.Create(int(value), interpreteter.INTEGER), nil
+	return impl.tokenFactory.NewToken(int(value), interpreteter.INTEGER), nil
 }
