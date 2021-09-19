@@ -1,7 +1,7 @@
 package interpreteter
 
 type Eater interface {
-	Lexer
+	Current() Token
 	Eat(string) error
 }
 
@@ -19,13 +19,9 @@ func (e *_Eater) Eat(kind string) error {
 	if e.lexer.Current().Type() != kind {
 		return ErrInvalidSyntax
 	}
-	return e.Next()
+	return e.lexer.Next()
 }
 
 func (e *_Eater) Current() Token {
 	return e.lexer.Current()
-}
-
-func (e *_Eater) Next() error {
-	return e.lexer.Next()
 }
