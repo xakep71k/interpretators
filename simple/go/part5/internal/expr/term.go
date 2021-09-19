@@ -1,10 +1,8 @@
 package expr
 
-import (
-	"interpreteter/internal/interpreteter"
-)
+import "interpreteter/internal/interpreteter"
 
-func expr(eater interpreteter.Eater) (int, error) {
+func term(eater interpreteter.Eater) (int, error) {
 	result, err := factor(eater)
 	if err != nil {
 		return 0, err
