@@ -1,0 +1,27 @@
+use interpretator::Interpretator;
+use std::io::{self, stdout, Write};
+
+mod interpretator;
+mod token;
+
+fn main() {
+    let stdin = io::stdin();
+    let mut input = String::new();
+    loop {
+        print!("calc> ");
+        stdout().flush().expect("flush failed");
+        stdin.read_line(&mut input).expect("read line failed");
+        if input.len() == 0 || input.chars().next() == Some('\n') {
+            if input.len() == 0 {
+                println!();
+            }
+            continue;
+        }
+        let mut interpreter = Interpretator::new(&input);
+        match interpreter.expr() {
+            Err(err) => eprintln!("{}", err),
+            Ok(result) => println!("{}", result),
+        }
+        input.clear();
+    }
+}
