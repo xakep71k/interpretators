@@ -4,7 +4,7 @@ pub struct Interpretator {
     line: Vec<char>,
     index: usize,
     current_token: Token,
-    err: String,
+    err: &'static str,
 }
 
 impl Interpretator {
@@ -13,7 +13,7 @@ impl Interpretator {
             index: 0,
             line: line.chars().collect(),
             current_token: Token::new(Type::EOF),
-            err: "Error parsing input".to_string(),
+            err: "Error parsing input",
         }
     }
 
@@ -36,7 +36,7 @@ impl Interpretator {
         if let Some(t) = Token::from_char(current_char) {
             Ok(t)
         } else {
-            Err(self.err.clone())
+            Err(self.err.to_string())
         }
     }
 
@@ -45,6 +45,6 @@ impl Interpretator {
             self.current_token = self.next_token()?;
             return Ok(());
         }
-        Err(self.err.clone())
+        Err(self.err.to_string())
     }
 }

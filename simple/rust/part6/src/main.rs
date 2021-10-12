@@ -2,6 +2,7 @@ use interpretator::Interpretator;
 use std::io::{self, stdout, Write};
 
 mod interpretator;
+mod lexer;
 mod token;
 
 fn main() {
@@ -19,7 +20,13 @@ fn main() {
         if input.chars().next() == Some('\n') {
             continue;
         }
-        let mut interpreter = Interpretator::new(&input);
+        let mut interpreter = match Interpretator::new(&input) {
+            Ok(interpreter) => interpreter,
+            Err(err) => {
+                eprintln!("{}", err);
+                continue;
+            }
+        };
         match interpreter.expr() {
             Err(err) => eprintln!("{}", err),
             Ok(result) => println!("{}", result),
