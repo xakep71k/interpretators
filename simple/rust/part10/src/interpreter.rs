@@ -53,10 +53,6 @@ impl Interpreteter {
         let tree = parser.parse()?;
         println!("{:?}", tree);
         self.visit_node(tree)?;
-        // println!("GLOBAL SCOPE: {:?}", self.global_scope);
-        // for k, v in self.global_scope {
-        //     println!("{} = {}", k, v);
-        // }
         let mut result = Vec::new();
         self.global_scope.iter().for_each(|(k, v)| {
             result.push(format!("{} = {:?}", k, v));
@@ -87,11 +83,12 @@ impl Interpreteter {
                     self.visit_node(*right)?.unwrap(),
                     |a, b| a * b,
                 ))),
-                token::Kind::FLOAT_DIV => Ok(Some(arithmetic(
-                    self.visit_node(*left)?.unwrap(),
-                    self.visit_node(*right)?.unwrap(),
-                    |a, b| a / b,
-                ))),
+                token::Kind::FLOAT_DIV => {
+                    let a = self.visit_node(*left)?.unwrap();
+                    let b = self.visit_node(*right)?.unwrap();
+                    let c = a.as_f32() / b.as_f32();
+                    Ok(Some(CaclResult::FLOAT(c)))
+                }
                 token::Kind::INTEGER_DIV => Ok(Some(arithmetic(
                     self.visit_node(*left)?.unwrap(),
                     self.visit_node(*right)?.unwrap(),

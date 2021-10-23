@@ -3,6 +3,8 @@ pub enum Type {
     EOF,
     MUL,
     DIV,
+    PLUS,
+    MINUS,
     INTEGER,
 }
 
