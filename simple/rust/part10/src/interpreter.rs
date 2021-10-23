@@ -53,13 +53,17 @@ impl Interpreteter {
         let tree = parser.parse()?;
         println!("{:?}", tree);
         self.visit_node(tree)?;
+        self.print_global_scope();
+        Ok(())
+    }
+
+    fn print_global_scope(&self) {
         let mut result = Vec::new();
         self.global_scope.iter().for_each(|(k, v)| {
             result.push(format!("{} = {:?}", k, v));
         });
         result.sort();
         result.iter().for_each(|s| println!("{}", s));
-        Ok(())
     }
 
     fn visit_node(&mut self, node: AST) -> Result<Option<CaclResult>, String> {
