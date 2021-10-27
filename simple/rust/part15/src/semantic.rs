@@ -20,6 +20,11 @@ impl SemanticAnalyzer {
         println!("{}", self.current_scope);
     }
 
+    pub fn log(&self, line: String) {
+        if self.debug_scope {
+            println!("{}", line);
+        }
+    }
     pub fn visit_node(&mut self, node: AST) -> Result<(), Error> {
         match node {
             AST::Block {
@@ -32,9 +37,7 @@ impl SemanticAnalyzer {
                 self.visit_node(*compound_nodes)?;
             }
             AST::Program { name: _, block } => {
-                if self.debug_scope {
-                    println!("ENTER scope: global");
-                }
+                self.log(format!("ENTER scope: global"));
                 let prev_scope = std::mem::replace(
                     &mut self.current_scope,
                     ScopedSymbolTable::new("global".to_string(), 1, self.debug_scope),
@@ -43,13 +46,9 @@ impl SemanticAnalyzer {
 
                 self.visit_node(*block)?;
 
-                if self.debug_scope {
-                    println!("{}", self.current_scope);
-                }
+                self.log(format!("{}", self.current_scope));
                 self.current_scope = self.current_scope.enclosing_scope();
-                if self.debug_scope {
-                    println!("LEAVE scope: global");
-                }
+                self.log(format!("LEAVE scope: global"));
             }
             AST::Compound { children } => {
                 for child in children {
@@ -65,9 +64,7 @@ impl SemanticAnalyzer {
                     name: id.clone(),
                     params: params.clone(),
                 });
-                if self.debug_scope {
-                    println!("ENTER scope: {}", id);
-                }
+                self.log(format!("ENTER scope: {}", id));
                 let current_scope_level = self.current_scope.scope_level();
                 let prev_scope = std::mem::replace(
                     &mut self.current_scope,
@@ -87,13 +84,9 @@ impl SemanticAnalyzer {
 
                 self.visit_node(*block_node)?;
 
-                if self.debug_scope {
-                    println!("{}", self.current_scope);
-                }
+                self.log(format!("{}", self.current_scope));
                 self.current_scope = self.current_scope.enclosing_scope();
-                if self.debug_scope {
-                    println!("LEAVE scope: {}", id);
-                }
+                self.log(format!("LEAVE scope: {}", id));
             }
             AST::NumInteger { value: _ }
             | AST::NumReal { value: _ }

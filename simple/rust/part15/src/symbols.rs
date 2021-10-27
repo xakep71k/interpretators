@@ -124,16 +124,15 @@ impl ScopedSymbolTable {
     }
 
     pub fn insert(&mut self, symbol: Symbol) {
-        if self.debug_scope {
-            println!("Insert: {}", symbol.name());
-        }
+        self.log(format!("Insert: {}", symbol.name()));
         self.table.insert(symbol.name(), symbol);
     }
 
     pub fn lookup(&self, name: &str) -> Option<Symbol> {
-        if self.debug_scope {
-            println!("Lookup: {} (Scope name: {})", name, self.scope_name);
-        }
+        self.log(format!(
+            "Lookup: {} (Scope name: {})",
+            name, self.scope_name
+        ));
         if let Some(symbol) = self.table.get(name) {
             Some(symbol.clone())
         } else if self.enclosing_scope.as_ref().unwrap().scope_level != 0 {
@@ -144,13 +143,20 @@ impl ScopedSymbolTable {
     }
 
     pub fn lookup_current_only(&self, name: &str) -> Option<Symbol> {
-        if self.debug_scope {
-            println!("Lookup: {} (Scope name: {})", name, self.scope_name);
-        }
+        self.log(format!(
+            "Lookup: {} (Scope name: {})",
+            name, self.scope_name
+        ));
         if let Some(symbol) = self.table.get(name) {
             Some(symbol.clone())
         } else {
             None
+        }
+    }
+
+    fn log(&self, line: String) {
+        if self.debug_scope {
+            println!("{}", line);
         }
     }
 }
