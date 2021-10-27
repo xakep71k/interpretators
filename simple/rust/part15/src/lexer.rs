@@ -80,9 +80,10 @@ impl Lexer {
         }
     }
 
-    fn number(&mut self) -> token::Kind {
+    fn number(&mut self) -> token::Token {
         let mut result = String::new();
         let mut is_real = false;
+        let mut token = self.new_token(token::Kind::INTEGER_CONST(0));
         while let Some(current_char) = self.current_char {
             if current_char == '.' {
                 if is_real {
@@ -96,14 +97,16 @@ impl Lexer {
             self.advance();
         }
         if is_real {
-            token::Kind::REAL_CONST(result.parse().unwrap())
+            token.kind = token::Kind::REAL_CONST(result.parse().unwrap());
         } else {
-            token::Kind::INTEGER_CONST(result.parse().unwrap())
+            token.kind = token::Kind::INTEGER_CONST(result.parse().unwrap());
         }
+        token
     }
 
-    fn id(&mut self) -> Result<token::Kind, Error> {
+    fn id(&mut self) -> Result<token::Token, Error> {
         let mut result = String::new();
+        let mut token = self.new_token(token::Kind::ID(String::new()));
         while let Some(current_char) = self.current_char {
             if !current_char.is_ascii_alphanumeric() {
                 break;
@@ -113,10 +116,11 @@ impl Lexer {
         }
 
         if let Some(kind) = self.reserved_keywords.get(&result.to_uppercase()[..]) {
-            Ok(kind.clone())
+            token.kind = kind.clone();
         } else {
-            Ok(token::Kind::ID(result))
+            token.kind = token::Kind::ID(result);
         }
+        Ok(token)
     }
 
     pub fn new_token(&self, kind: token::Kind) -> token::Token {
@@ -140,19 +144,18 @@ impl Lexer {
             }
 
             if current_char.is_ascii_alphabetic() {
-                let id = self.id()?;
-                return Ok(self.new_token(id));
+                return self.id();
             }
 
             if current_char.is_ascii_digit() {
-                let num = self.number();
-                return Ok(self.new_token(num));
+                return Ok(self.number());
             }
 
             if current_char == ':' && self.peek().is_some() && self.peek().unwrap() == '=' {
+                let token = self.new_token(token::Kind::ASSIGN);
                 self.advance();
                 self.advance();
-                return Ok(self.new_token(token::Kind::ASSIGN));
+                return Ok(token);
             }
 
             let kind = match current_char {

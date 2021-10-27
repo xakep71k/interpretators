@@ -37,7 +37,7 @@ impl std::fmt::Display for Kind {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Token {
     pub kind: Kind,
     pub lineno: usize,

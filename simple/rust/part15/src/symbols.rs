@@ -44,6 +44,7 @@ pub struct ScopedSymbolTable {
     scope_name: String,
     scope_level: usize,
     enclosing_scope: Option<Box<ScopedSymbolTable>>,
+    debug_scope: bool,
 }
 
 impl std::fmt::Display for ScopedSymbolTable {
@@ -93,12 +94,13 @@ impl std::fmt::Display for ScopedSymbolTable {
 }
 
 impl ScopedSymbolTable {
-    pub fn new(scope_name: String, scope_level: usize) -> ScopedSymbolTable {
+    pub fn new(scope_name: String, scope_level: usize, debug_scope: bool) -> ScopedSymbolTable {
         let mut new = ScopedSymbolTable {
             table: HashMap::new(),
-            scope_level: scope_level,
-            scope_name: scope_name,
+            scope_level,
+            scope_name,
             enclosing_scope: None,
+            debug_scope,
         };
         if scope_level == 1 {
             vec![VarType::INTEGER, VarType::REAL].iter().for_each(|t| {
@@ -122,12 +124,16 @@ impl ScopedSymbolTable {
     }
 
     pub fn insert(&mut self, symbol: Symbol) {
-        println!("Insert: {}", symbol.name());
+        if self.debug_scope {
+            println!("Insert: {}", symbol.name());
+        }
         self.table.insert(symbol.name(), symbol);
     }
 
     pub fn lookup(&self, name: &str) -> Option<Symbol> {
-        println!("Lookup: {} (Scope name: {})", name, self.scope_name);
+        if self.debug_scope {
+            println!("Lookup: {} (Scope name: {})", name, self.scope_name);
+        }
         if let Some(symbol) = self.table.get(name) {
             Some(symbol.clone())
         } else if self.enclosing_scope.as_ref().unwrap().scope_level != 0 {
@@ -138,7 +144,9 @@ impl ScopedSymbolTable {
     }
 
     pub fn lookup_current_only(&self, name: &str) -> Option<Symbol> {
-        println!("Lookup: {} (Scope name: {})", name, self.scope_name);
+        if self.debug_scope {
+            println!("Lookup: {} (Scope name: {})", name, self.scope_name);
+        }
         if let Some(symbol) = self.table.get(name) {
             Some(symbol.clone())
         } else {

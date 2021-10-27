@@ -28,6 +28,7 @@ pub enum AST {
     VarDecl {
         id: String,
         var_type: VarType,
+        token: token::Token,
     },
     ProcedureDecl {
         id: String,
@@ -59,6 +60,7 @@ pub enum AST {
     },
     Var {
         id: String,
+        token: token::Token,
     },
     NoOp,
 }
@@ -98,7 +100,7 @@ impl Parser {
         // program : compound_statement DOT
         self.eat(token::Kind::PROGRAM)?;
         let program_name = match self.variable()? {
-            AST::Var { id } => id,
+            AST::Var { id, .. } => id,
             _ => panic!("impossible"),
         };
         self.eat(token::Kind::SEMI)?;
@@ -248,6 +250,7 @@ impl Parser {
             .map(|id| AST::VarDecl {
                 id,
                 var_type: var_type.clone(),
+                token: self.current_token.clone(),
             })
             .collect())
     }
@@ -309,12 +312,16 @@ impl Parser {
 
     fn variable(&mut self) -> Result<AST, Error> {
         // variable : ID
+        let id_token = self.current_token.clone();
         let id = match self.current_token.kind.clone() {
             token::Kind::ID(id) => id,
             _ => String::new(),
         };
         self.eat(token::Kind::ID(id.clone()))?;
-        Ok(AST::Var { id })
+        Ok(AST::Var {
+            id,
+            token: id_token,
+        })
     }
 
     fn expr(&mut self) -> Result<AST, Error> {

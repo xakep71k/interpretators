@@ -5,12 +5,14 @@ use crate::symbols::Symbol;
 
 pub struct SemanticAnalyzer {
     current_scope: ScopedSymbolTable,
+    debug_scope: bool,
 }
 
 impl SemanticAnalyzer {
-    pub fn new() -> SemanticAnalyzer {
+    pub fn new(debug_scope: bool) -> SemanticAnalyzer {
         SemanticAnalyzer {
-            current_scope: ScopedSymbolTable::new("None".to_string(), 0),
+            current_scope: ScopedSymbolTable::new("None".to_string(), 0, debug_scope),
+            debug_scope,
         }
     }
 
@@ -30,18 +32,24 @@ impl SemanticAnalyzer {
                 self.visit_node(*compound_nodes)?;
             }
             AST::Program { name: _, block } => {
-                println!("ENTER scope: global");
+                if self.debug_scope {
+                    println!("ENTER scope: global");
+                }
                 let prev_scope = std::mem::replace(
                     &mut self.current_scope,
-                    ScopedSymbolTable::new("global".to_string(), 1),
+                    ScopedSymbolTable::new("global".to_string(), 1, self.debug_scope),
                 );
                 self.current_scope.set_enclosing_scope(prev_scope);
 
                 self.visit_node(*block)?;
 
-                println!("{}", self.current_scope);
+                if self.debug_scope {
+                    println!("{}", self.current_scope);
+                }
                 self.current_scope = self.current_scope.enclosing_scope();
-                println!("LEAVE scope: global");
+                if self.debug_scope {
+                    println!("LEAVE scope: global");
+                }
             }
             AST::Compound { children } => {
                 for child in children {
@@ -57,11 +65,13 @@ impl SemanticAnalyzer {
                     name: id.clone(),
                     params: params.clone(),
                 });
-                println!("ENTER scope: {}", id);
+                if self.debug_scope {
+                    println!("ENTER scope: {}", id);
+                }
                 let current_scope_level = self.current_scope.scope_level();
                 let prev_scope = std::mem::replace(
                     &mut self.current_scope,
-                    ScopedSymbolTable::new(id.clone(), current_scope_level + 1),
+                    ScopedSymbolTable::new(id.clone(), current_scope_level + 1, self.debug_scope),
                 );
                 self.current_scope.set_enclosing_scope(prev_scope);
 
@@ -77,9 +87,13 @@ impl SemanticAnalyzer {
 
                 self.visit_node(*block_node)?;
 
-                println!("{}", self.current_scope);
+                if self.debug_scope {
+                    println!("{}", self.current_scope);
+                }
                 self.current_scope = self.current_scope.enclosing_scope();
-                println!("LEAVE scope: {}", id);
+                if self.debug_scope {
+                    println!("LEAVE scope: {}", id);
+                }
             }
             AST::NumInteger { value: _ }
             | AST::NumReal { value: _ }
@@ -90,28 +104,32 @@ impl SemanticAnalyzer {
                 left,
                 right,
             } => {
-                self.visit_node(*left)?;
                 self.visit_node(*right)?;
+                self.visit_node(*left)?;
             }
             AST::BinOp { left, right, op: _ } => {
                 self.visit_node(*right)?;
                 self.visit_node(*left)?;
             }
-            AST::VarDecl { id, var_type } => {
+            AST::VarDecl {
+                id,
+                var_type,
+                token,
+            } => {
                 // use to see same output as origial python implementation
                 self.current_scope.lookup(&var_type.name());
                 if let Some(_) = self.current_scope.lookup_current_only(&id) {
-                    return Err(Error::DUPLICATE_ID(id));
+                    return Err(Error::DUPLICATE_ID(token));
                 }
                 self.current_scope.insert(Symbol::Var {
                     name: id,
                     kind: var_type,
                 });
             }
-            AST::Var { id } => {
+            AST::Var { id, token } => {
                 let sym = self.current_scope.lookup(&id);
                 if sym.is_none() {
-                    return Err(Error::ID_NOT_FOUND(id));
+                    return Err(Error::ID_NOT_FOUND(token));
                 }
             }
         }

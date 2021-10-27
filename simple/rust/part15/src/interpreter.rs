@@ -76,7 +76,7 @@ impl Interpreteter {
                 }
                 return self.visit_node(*compound_nodes);
             }
-            AST::VarDecl { id: _, var_type: _ } => Ok(None),
+            AST::VarDecl { .. } => Ok(None),
             AST::NumInteger { value } => Ok(Some(CaclResult::INTEGER(value))),
             AST::NumReal { value } => Ok(Some(CaclResult::FLOAT(value))),
             AST::BinOp { left, right, op } => match op {
@@ -134,11 +134,11 @@ impl Interpreteter {
                 self.global_memory.insert(left_id, res.unwrap());
                 Ok(None)
             }
-            AST::Var { id } => {
+            AST::Var { id, token } => {
                 if let Some(value) = self.global_memory.get(&id) {
                     Ok(Some(value.clone()))
                 } else {
-                    Err(Error::ID_NOT_FOUND(id))
+                    Err(Error::ID_NOT_FOUND(token))
                 }
             }
             AST::NoOp
