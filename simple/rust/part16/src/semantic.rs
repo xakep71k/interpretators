@@ -125,6 +125,11 @@ impl SemanticAnalyzer {
                     return Err(Error::ID_NOT_FOUND(token));
                 }
             }
+            AST::ProcedureCall { params, .. } => {
+                for param in params {
+                    self.visit_node(param)?;
+                }
+            }
         }
         Ok(())
     }

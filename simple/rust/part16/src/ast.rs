@@ -33,6 +33,11 @@ pub enum AST {
         params: Vec<Param>,
         block_node: Box<AST>,
     },
+    ProcedureCall {
+        id: String,
+        params: Vec<AST>,
+        token: token::Token,
+    },
     NumInteger {
         value: i32,
     },

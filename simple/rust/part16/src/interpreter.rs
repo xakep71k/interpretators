@@ -66,7 +66,7 @@ impl Interpreteter {
 
     fn visit_node(&mut self, node: AST) -> Result<Option<CaclResult>, Error> {
         match node {
-            AST::Program { name: _, block } => return self.visit_node(*block),
+            AST::Program { block, .. } => return self.visit_node(*block),
             AST::Block {
                 declaration_nodes,
                 compound_nodes,
@@ -125,11 +125,7 @@ impl Interpreteter {
                 }
                 Ok(None)
             }
-            AST::Assign {
-                left_id,
-                left: _,
-                right,
-            } => {
+            AST::Assign { left_id, right, .. } => {
                 let res = self.visit_node(*right)?;
                 self.global_memory.insert(left_id, res.unwrap());
                 Ok(None)
@@ -141,12 +137,7 @@ impl Interpreteter {
                     Err(Error::ID_NOT_FOUND(token))
                 }
             }
-            AST::NoOp
-            | AST::ProcedureDecl {
-                id: _,
-                params: _,
-                block_node: _,
-            } => Ok(None),
+            AST::NoOp | AST::ProcedureDecl { .. } | AST::ProcedureCall { .. } => Ok(None),
         }
     }
 }

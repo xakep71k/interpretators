@@ -177,4 +177,8 @@ impl Lexer {
         }
         Ok(self.new_token(token::Kind::EOF))
     }
+
+    pub fn current_char(&self) -> Option<char> {
+        self.current_char
+    }
 }

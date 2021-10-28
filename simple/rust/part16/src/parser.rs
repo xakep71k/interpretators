@@ -69,45 +69,18 @@ impl Parser {
         //             | empty
         let mut declarations: Vec<AST> = Vec::new();
 
-        loop {
-            if self.current_token.kind == token::Kind::VAR {
-                self.eat(token::Kind::VAR)?;
-                while let token::Kind::ID(_) = self.current_token.kind {
-                    let mut var_decl = self.variable_declaration()?;
-                    declarations.append(&mut var_decl);
-                    self.eat(token::Kind::SEMI)?;
-                }
-            } else {
-                match self.current_token.kind.clone() {
-                    token::Kind::PROCEDURE => {
-                        self.eat(self.current_token.kind.clone())?;
-                        let id = match self.current_token.kind.clone() {
-                            token::Kind::ID(id) => id,
-                            _ => String::new(),
-                        };
-                        self.eat(token::Kind::ID(id.clone()))?;
-
-                        let params: Vec<Param> = match self.current_token.kind.clone() {
-                            kind @ token::Kind::LPAREN => {
-                                self.eat(kind)?;
-                                let params = self.formal_parameter_list()?;
-                                self.eat(token::Kind::RPAREN)?;
-                                params
-                            }
-                            _ => Vec::new(),
-                        };
-
-                        self.eat(token::Kind::SEMI)?;
-                        declarations.push(AST::ProcedureDecl {
-                            id,
-                            params,
-                            block_node: Box::new(self.block()?),
-                        });
-                        self.eat(token::Kind::SEMI)?;
-                    }
-                    _ => break,
-                }
+        if self.current_token.kind == token::Kind::VAR {
+            self.eat(token::Kind::VAR)?;
+            while let token::Kind::ID(_) = self.current_token.kind {
+                let mut var_decl = self.variable_declaration()?;
+                declarations.append(&mut var_decl);
+                self.eat(token::Kind::SEMI)?;
             }
+        }
+
+        while let token::Kind::PROCEDURE = self.current_token.kind {
+            let proc_decl = self.procedure_declaration()?;
+            declarations.push(proc_decl);
         }
         Ok(declarations)
     }
@@ -154,7 +127,7 @@ impl Parser {
         loop {
             params.append(&mut self.formal_parameters()?);
             match self.current_token.kind {
-                token::Kind::SEMI => continue,
+                token::Kind::SEMI => self.eat(token::Kind::SEMI)?,
                 _ => break,
             };
         }
@@ -194,6 +167,32 @@ impl Parser {
             .collect())
     }
 
+    fn procedure_declaration(&mut self) -> Result<AST, Error> {
+        // PROCEDURE ID (LPAREN formal_parameter_list RPAREN)? SEMI block SEMI
+        self.eat(token::Kind::PROCEDURE)?;
+        let id = match self.current_token.kind.clone() {
+            token::Kind::ID(id) => id,
+            _ => String::new(),
+        };
+        self.eat(token::Kind::ID(String::new()))?;
+        let mut params = Vec::new();
+
+        if let token::Kind::LPAREN = self.current_token.kind {
+            self.eat(token::Kind::LPAREN)?;
+            params = self.formal_parameter_list()?;
+            self.eat(token::Kind::RPAREN)?;
+        }
+
+        self.eat(token::Kind::SEMI)?;
+        let proc_decl = AST::ProcedureDecl {
+            id,
+            params,
+            block_node: Box::new(self.block()?),
+        };
+        self.eat(token::Kind::SEMI)?;
+        Ok(proc_decl)
+    }
+
     fn type_spec(&mut self) -> Result<VarType, Error> {
         let var_type = match self.current_token.kind.clone() {
             token::Kind::TYPE(var_type) => var_type,
@@ -212,8 +211,12 @@ impl Parser {
     }
 
     fn statement_list(&mut self) -> Result<Vec<AST>, Error> {
-        // statement_list : statement
-        //                | statement SEMI statement_list
+        /*
+        statement : compound_statement
+                 | proccall_statement
+                 | assignment_statement
+                 | empty
+        */
         let node = self.statement()?;
         let mut results = vec![node];
 
@@ -230,11 +233,43 @@ impl Parser {
         //           | assignment_statement
         //           | empty
         let token = self.current_token.clone();
-        match token.kind {
-            token::Kind::BEGIN => self.compound_statement(),
-            token::Kind::ID(name) => self.assignment_statement(name),
-            _ => Ok(AST::NoOp),
+        let node;
+        if let token::Kind::BEGIN = token.kind {
+            node = self.compound_statement()?;
+        } else if std::mem::discriminant(&token.kind)
+            == std::mem::discriminant(&token::Kind::ID(String::new()))
+            && self.lexer.current_char().unwrap_or('0') == '('
+        {
+            node = self.proccall_statement()?;
+        } else if let token::Kind::ID(id) = token.kind {
+            node = self.assignment_statement(id)?;
+        } else {
+            node = AST::NoOp;
         }
+        Ok(node)
+    }
+
+    fn proccall_statement(&mut self) -> Result<AST, Error> {
+        // proccall_statement : ID LPAREN (expr (COMMA expr)*)? RPAREN
+        let token = self.current_token.clone();
+        let id = match self.current_token.kind.clone() {
+            token::Kind::ID(id) => id,
+            _ => String::new(),
+        };
+        self.eat(token::Kind::ID(String::new()))?;
+        self.eat(token::Kind::LPAREN)?;
+        let mut params = Vec::new();
+        loop {
+            let node = self.expr()?;
+            params.push(node);
+            match self.current_token.kind.clone() {
+                kind @ token::Kind::COMMA => self.eat(kind)?,
+                _ => break,
+            };
+        }
+
+        self.eat(token::Kind::RPAREN)?;
+        Ok(AST::ProcedureCall { id, params, token })
     }
 
     fn assignment_statement(&mut self, left_id: String) -> Result<AST, Error> {
@@ -342,29 +377,37 @@ impl Parser {
     }
 
     pub fn parse(mut self) -> Result<AST, Error> {
-        // program : PROGRAM variable SEMI block DOT
-        // block : declarations compound_statement
-        // declarations : VAR (variable_declaration SEMI)+
-        //              | empty
-        // variable_declaration : ID (COMMA ID)* COLON type_spec
-        // type_spec : INTEGER | REAL
-        // compound_statement : BEGIN statement_list END
-        // statement_list : statement
-        //                | statement SEMI statement_list
-        // statement : compound_statement
-        //           | assignment_statement
-        //           | empty
-        // assignment_statement : variable ASSIGN expr
-        // empty :
-        // expr : term ((PLUS | MINUS) term)*
-        // term : factor ((MUL | INTEGER_DIV | FLOAT_DIV) factor)*
-        // factor : PLUS factor
-        //        | MINUS factor
-        //        | INTEGER_CONST
-        //        | REAL_CONST
-        //        | LPAREN expr RPAREN
-        //        | variable
-        // variable: ID
+        /*
+        program : PROGRAM variable SEMI block DOT
+        block : declarations compound_statement
+        declarations : (VAR (variable_declaration SEMI)+)? procedure_declaration*
+        variable_declaration : ID (COMMA ID)* COLON type_spec
+        procedure_declaration :
+             PROCEDURE ID (LPAREN formal_parameter_list RPAREN)? SEMI block SEMI
+        formal_params_list : formal_parameters
+                           | formal_parameters SEMI formal_parameter_list
+        formal_parameters : ID (COMMA ID)* COLON type_spec
+        type_spec : INTEGER | REAL
+        compound_statement : BEGIN statement_list END
+        statement_list : statement
+                       | statement SEMI statement_list
+        statement : compound_statement
+                  | proccall_statement
+                  | assignment_statement
+                  | empty
+        proccall_statement : ID LPAREN (expr (COMMA expr)*)? RPAREN
+        assignment_statement : variable ASSIGN expr
+        empty :
+        expr : term ((PLUS | MINUS) term)*
+        term : factor ((MUL | INTEGER_DIV | FLOAT_DIV) factor)*
+        factor : PLUS factor
+               | MINUS factor
+               | INTEGER_CONST
+               | REAL_CONST
+               | LPAREN expr RPAREN
+               | variable
+        variable: ID
+        */
         let node = self.program()?;
         if std::mem::discriminant(&self.current_token.kind)
             != std::mem::discriminant(&token::Kind::EOF)
