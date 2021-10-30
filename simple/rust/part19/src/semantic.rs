@@ -56,14 +56,12 @@ impl SemanticAnalyzer {
                 params,
                 block_node,
             } => {
-                /*
                 self.current_scope.insert(Symbol::Procedure {
                     name: id.clone(),
                     params: params.clone(),
                     block: *block_node.clone(),
                     scope_level: 0,
                 });
-                */
                 self.log(format!("ENTER scope: {}", id));
                 let current_scope_level = self.current_scope.scope_level();
                 let prev_scope = std::mem::replace(
@@ -87,6 +85,7 @@ impl SemanticAnalyzer {
 
                 self.log(format!("{}", self.current_scope));
                 self.current_scope = self.current_scope.enclosing_scope();
+                // replace new block
                 self.current_scope.insert(Symbol::Procedure {
                     name: id.clone(),
                     params: params.clone(),
