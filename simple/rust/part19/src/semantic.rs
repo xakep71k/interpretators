@@ -85,7 +85,7 @@ impl SemanticAnalyzer {
 
                 self.log(format!("{}", self.current_scope));
                 self.current_scope = self.current_scope.enclosing_scope();
-                // replace new block
+                // replace with new block
                 self.current_scope.insert(Symbol::Procedure {
                     name: id.clone(),
                     params: params.clone(),

@@ -23,3 +23,9 @@ impl std::fmt::Display for Error {
         Ok(())
     }
 }
+
+impl std::fmt::Debug for Error {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(fmt, "{}", self)
+    }
+}
