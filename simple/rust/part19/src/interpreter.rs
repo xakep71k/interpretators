@@ -78,7 +78,7 @@ impl Interpreteter {
                 for declaration in declaration_nodes {
                     self.visit_node(declaration)?;
                 }
-                return self.visit_node(*compound_nodes);
+                self.visit_node(*compound_nodes)
             }
             AST::VarDecl { .. } => Ok(None),
             AST::NumInteger { value } => Ok(Some(CalcResult::INTEGER(value))),
